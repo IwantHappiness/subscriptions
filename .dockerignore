@@ -1,0 +1,6 @@
+.idea
+out
+LICENSE
+README.md
+.gitignore
+justfile
