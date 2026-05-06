@@ -7,5 +7,5 @@ CREATE TABLE subscriptions (
     end_date DATE
 );
 
--- CREATE INDEX IF NOT EXISTS idx_subscriptions_user_id ON subscriptions (user_id);
--- CREATE UNIQUE INDEX IF NOT EXISTS idx_user_service ON subscriptions (user_id, service_name);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_user_service_dates
+ON subscriptions (user_id, service_name, start_date, end_date);
