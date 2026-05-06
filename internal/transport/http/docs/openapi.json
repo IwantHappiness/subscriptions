@@ -1,0 +1,454 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Subscriptions API",
+    "version": "1.0.0",
+    "description": "CRUD API for managing subscriptions"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Subscriptions",
+      "description": "Operations related to subscriptions"
+    }
+  ],
+  "paths": {
+    "/api/v1/subscriptions": {
+      "get": {
+        "tags": ["Subscriptions"],
+        "summary": "List subscriptions",
+        "operationId": "listSubscriptions",
+        "responses": {
+          "200": {
+            "description": "Subscription list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Subscription"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Subscriptions"],
+        "summary": "Create subscription",
+        "operationId": "createSubscription",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSubscriptionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created subscription",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Subscription"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/api/v1/subscriptions/total-price": {
+      "get": {
+        "tags": ["Subscriptions"],
+        "summary": "Get total subscription price for selected period",
+        "operationId": "getTotalSubscriptionPrice",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": true,
+            "description": "User identifier",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "60601fee-2bf1-4721-ae6f-7636e79a0cba"
+            }
+          },
+          {
+            "name": "service_name",
+            "in": "query",
+            "required": true,
+            "description": "Subscription service name",
+            "schema": {
+              "type": "string",
+              "example": "Spotify Premium"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "description": "Start month of the selected period in MM-YYYY format. Included in the calculation.",
+            "schema": {
+              "type": "string",
+              "pattern": "^(0[1-9]|1[0-2])-\\d{4}$",
+              "example": "01-2024"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "description": "End month of the selected period in MM-YYYY format. Included in the calculation.",
+            "schema": {
+              "type": "string",
+              "pattern": "^(0[1-9]|1[0-2])-\\d{4}$",
+              "example": "03-2024"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Total monthly subscription price for the selected period, filtered by user_id and service_name. The total includes every month where a subscription overlaps the selected period.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TotalPrice"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/api/v1/subscriptions/{id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/SubscriptionID"
+        }
+      ],
+      "get": {
+        "tags": ["Subscriptions"],
+        "summary": "Get subscription by id",
+        "operationId": "getSubscriptionById",
+        "responses": {
+          "200": {
+            "description": "Subscription",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Subscription"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "put": {
+        "tags": ["Subscriptions"],
+        "summary": "Update subscription",
+        "operationId": "updateSubscription",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSubscriptionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated subscription",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Subscription"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Subscriptions"],
+        "summary": "Delete subscription",
+        "operationId": "deleteSubscription",
+        "responses": {
+          "204": {
+            "description": "Subscription deleted"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "SubscriptionID": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "description": "Subscription identifier",
+        "schema": {
+          "type": "integer",
+          "format": "int64",
+          "minimum": 1
+        }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Bad request",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "invalid_subscription_id": {
+                "summary": "Invalid id in path",
+                "value": {
+                  "error": "invalid subscription id"
+                }
+              },
+              "invalid_input": {
+                "summary": "Domain validation error",
+                "value": {
+                  "error": "invalid subscription input: service name is required"
+                }
+              }
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Subscription not found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "subscription_not_found": {
+                "summary": "Entity does not exist",
+                "value": {
+                  "error": "subscription not found"
+                }
+              }
+            }
+          }
+        }
+      },
+      "InternalServerError": {
+        "description": "Internal server error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "unexpected_error": {
+                "summary": "Unexpected backend failure",
+                "value": {
+                  "error": "internal server error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "CreateSubscriptionRequest": {
+        "type": "object",
+        "required": ["service_name", "price", "user_id", "start_date"],
+        "properties": {
+          "service_name": {
+            "type": "string",
+            "example": "Discord Nitro Classic"
+          },
+          "price": {
+            "type": "integer",
+            "example": 100
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "9ae7b56c-7aa9-4b2d-83b8-1be189ac221d"
+          },
+          "start_date": {
+            "type": "string",
+            "description": "Month and year in MM-YYYY format",
+            "pattern": "^(0[1-9]|1[0-2])-\\d{4}$",
+            "example": "02-2007"
+          },
+          "end_date": {
+            "type": "string",
+            "nullable": true,
+            "description": "Month and year in MM-YYYY format or null",
+            "pattern": "^(0[1-9]|1[0-2])-\\d{4}$",
+            "example": "03-2007"
+          }
+        }
+      },
+      "UpdateSubscriptionRequest": {
+        "type": "object",
+        "required": ["service_name", "price", "start_date"],
+        "properties": {
+          "service_name": {
+            "type": "string",
+            "example": "Spotify Premium"
+          },
+          "price": {
+            "type": "integer",
+            "example": 150
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "60601fee-2bf1-4721-ae6f-7636e79a0cba"
+          },
+          "start_date": {
+            "type": "string",
+            "description": "Month and year in MM-YYYY format",
+            "pattern": "^(0[1-9]|1[0-2])-\\d{4}$",
+            "example": "01-2024"
+          },
+          "end_date": {
+            "type": "string",
+            "nullable": true,
+            "description": "Month and year in MM-YYYY format or null",
+            "pattern": "^(0[1-9]|1[0-2])-\\d{4}$",
+            "example": "02-2024"
+          }
+        }
+      },
+      "Subscription": {
+        "type": "object",
+        "required": ["id", "service_name", "price", "user_id", "start_date"],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "service_name": {
+            "type": "string",
+            "example": "Spotify Premium"
+          },
+          "price": {
+            "type": "integer",
+            "example": 100
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "60601fee-2bf1-4721-ae6f-7636e79a0cba"
+          },
+          "start_date": {
+            "type": "string",
+            "description": "Month and year in MM-YYYY format",
+            "pattern": "^(0[1-9]|1[0-2])-\\d{4}$",
+            "example": "01-2024"
+          },
+          "end_date": {
+            "type": "string",
+            "nullable": true,
+            "description": "Month and year in MM-YYYY format or null",
+            "pattern": "^(0[1-9]|1[0-2])-\\d{4}$",
+            "example": "02-2024"
+          }
+        }
+      },
+      "TotalPrice": {
+        "type": "object",
+        "required": ["total_price", "user_id", "service_name", "list"],
+        "description": "Total price response for subscriptions matching user_id and service_name during the selected period. total_price is calculated as subscription price multiplied by the number of overlapping months.",
+        "properties": {
+          "total_price": {
+            "type": "integer",
+            "description": "Sum of monthly prices for all matching subscriptions over all overlapping months in the selected period.",
+            "example": 300
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "60601fee-2bf1-4721-ae6f-7636e79a0cba"
+          },
+          "service_name": {
+            "type": "string",
+            "example": "Spotify Premium"
+          },
+          "list": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Subscription"
+            }
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": ["error"],
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "invalid subscription id"
+          }
+        }
+      }
+    }
+  }
+}
