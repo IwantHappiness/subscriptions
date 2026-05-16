@@ -13,7 +13,7 @@ type Repository interface {
 	GetById(ctx context.Context, id int64) (*subdomain.Subscription, error)
 	Update(ctx context.Context, sub *subdomain.Subscription) (*subdomain.Subscription, error)
 	Delete(ctx context.Context, id int64) error
-	List(ctx context.Context) ([]subdomain.Subscription, error)
+	List(ctx context.Context, input subdomain.ListFilter) ([]subdomain.Subscription, error)
 	GetTotalPrice(ctx context.Context, input *subdomain.TotalCostFilter) (*subdomain.TotalPriceSubscription, error)
 }
 
@@ -22,7 +22,7 @@ type Usecase interface {
 	GetById(ctx context.Context, id int64) (*subdomain.Subscription, error)
 	Update(ctx context.Context, id int64, input UpdateInput) (*subdomain.Subscription, error)
 	Delete(ctx context.Context, id int64) error
-	List(ctx context.Context) ([]subdomain.Subscription, error)
+	List(ctx context.Context, input ListInput) ([]subdomain.Subscription, error)
 	GetTotalPrice(ctx context.Context, input GetTotalPriceInput) (*subdomain.TotalPriceSubscription, error)
 }
 
@@ -46,4 +46,9 @@ type GetTotalPriceInput struct {
 	ServiceName string     `json:"service_name"`
 	From        time.Time  `json:"from"`
 	To          *time.Time `json:"to"`
+}
+
+type ListInput struct {
+	Limit  int `json:"limit"`
+	Offset int `json:"offset"`
 }

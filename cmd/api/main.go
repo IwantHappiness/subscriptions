@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"time"
 
 	postgresinfra "github.com/IwantHappiness/subscriptions/internal/infrastructure/postgres"
@@ -18,11 +19,15 @@ import (
 )
 
 func main() {
-	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-		Level: slog.LevelInfo,
-	}))
+	cfg, err := loadConfig()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "load config: %v\n", err)
+		os.Exit(1)
+	}
 
-	cfg := loadConfig()
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: cfg.LogLevel,
+	}))
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
@@ -68,19 +73,26 @@ func main() {
 type config struct {
 	HTTPAddr    string
 	DatabaseDSN string
+	LogLevel    slog.Level
 }
 
-func loadConfig() config {
+func loadConfig() (config, error) {
+	logLevel, err := parseLogLevel(envOrDefault("LOG_LEVEL", "info"))
+	if err != nil {
+		return config{}, err
+	}
+
 	cfg := config{
 		HTTPAddr:    envOrDefault("HTTP_ADDR", ":8080"),
 		DatabaseDSN: envOrDefault("DATABASE_DSN", "postgres://postgres:sub-test-123@localhost:5432/test-sub?sslmode=disable"),
+		LogLevel:    logLevel,
 	}
 
 	if cfg.DatabaseDSN == "" {
-		panic(fmt.Errorf("DATABASE_DSN is required"))
+		return config{}, fmt.Errorf("DATABASE_DSN is required")
 	}
 
-	return cfg
+	return cfg, nil
 }
 
 func envOrDefault(key, fallback string) string {
@@ -88,4 +100,19 @@ func envOrDefault(key, fallback string) string {
 		return value
 	}
 	return fallback
+}
+
+func parseLogLevel(raw string) (slog.Level, error) {
+	switch strings.ToLower(strings.TrimSpace(raw)) {
+	case "debug":
+		return slog.LevelDebug, nil
+	case "info":
+		return slog.LevelInfo, nil
+	case "warn", "warning":
+		return slog.LevelWarn, nil
+	case "error":
+		return slog.LevelError, nil
+	default:
+		return slog.LevelInfo, fmt.Errorf("invalid LOG_LEVEL %q, expected debug, info, warn, or error", raw)
+	}
 }

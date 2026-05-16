@@ -82,18 +82,19 @@ func (r *Repository) Delete(ctx context.Context, id int64) error {
 	return nil
 }
 
-func (r *Repository) List(ctx context.Context) ([]subdomain.Subscription, error) {
+func (r *Repository) List(ctx context.Context, input subdomain.ListFilter) ([]subdomain.Subscription, error) {
 	const query = `
 	SELECT id, user_id, service_name, price, start_date, end_date
-	FROM subscriptions ORDER BY id ASC`
+	FROM subscriptions ORDER BY id ASC
+	LIMIT $1 OFFSET $2`
 
-	rows, err := r.pool.Query(ctx, query)
+	rows, err := r.pool.Query(ctx, query, input.Limit, input.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	subscriptions := make([]subdomain.Subscription, 0, 100)
+	subscriptions := make([]subdomain.Subscription, 0, input.Limit)
 	for rows.Next() {
 		subscription, err := scanSubscription(rows)
 		if err != nil {

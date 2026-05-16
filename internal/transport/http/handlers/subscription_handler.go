@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -12,6 +13,11 @@ import (
 	subUseCase "github.com/IwantHappiness/subscriptions/internal/usecase/subscription"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+)
+
+const (
+	defaultListLimit  = 100
+	defaultListOffset = 0
 )
 
 type SubHandler struct {
@@ -112,7 +118,13 @@ func (s *SubHandler) Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *SubHandler) List(w http.ResponseWriter, r *http.Request) {
-	subscriptions, err := s.usecase.List(r.Context())
+	input, err := getListInputFromRequest(r)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	subscriptions, err := s.usecase.List(r.Context(), input)
 	if err != nil {
 		s.writeUsecaseError(w, err)
 		return
@@ -124,6 +136,43 @@ func (s *SubHandler) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, response)
+}
+
+func getListInputFromRequest(r *http.Request) (subUseCase.ListInput, error) {
+	query := r.URL.Query()
+
+	limit, err := parseOptionalNonNegativeInt(query.Get("limit"), defaultListLimit)
+	if err != nil {
+		return subUseCase.ListInput{}, fmt.Errorf("invalid limit")
+	}
+
+	offset, err := parseOptionalNonNegativeInt(query.Get("offset"), defaultListOffset)
+	if err != nil {
+		return subUseCase.ListInput{}, fmt.Errorf("invalid offset")
+	}
+
+	return subUseCase.ListInput{
+		Limit:  limit,
+		Offset: offset,
+	}, nil
+}
+
+func parseOptionalNonNegativeInt(raw string, fallback int) (int, error) {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return fallback, nil
+	}
+
+	value, err := strconv.Atoi(raw)
+	if err != nil {
+		return 0, err
+	}
+
+	if value < 0 {
+		return 0, errors.New("value must be greater than or equal to 0")
+	}
+
+	return value, nil
 }
 
 func (s *SubHandler) GetTotalPrice(w http.ResponseWriter, r *http.Request) {

@@ -58,13 +58,18 @@ http://localhost:8080
 Основные ручки:
 
 ```text
-GET    /api/v1/subscriptions
+GET    /api/v1/subscriptions?limit=100&offset=0
 POST   /api/v1/subscriptions
 GET    /api/v1/subscriptions/{id}
 PUT    /api/v1/subscriptions/{id}
 DELETE /api/v1/subscriptions/{id}
 GET    /api/v1/subscriptions/total-price
 ```
+
+Для списка подписок доступны параметры пагинации:
+
+- `limit` - количество записей на странице, по умолчанию `100`, максимум `100`.
+- `offset` - количество записей, которые нужно пропустить, по умолчанию `0`.
 
 Пример запроса на подсчет стоимости:
 
@@ -87,11 +92,14 @@ http://localhost:8080/swagger/openapi.json
 
 ```env
 HTTP_ADDR=:8080
+LOG_LEVEL=info
 
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=sub-test-123
 POSTGRES_DB=test-sub
 ```
+
+`LOG_LEVEL` поддерживает значения `debug`, `info`, `warn`, `error`. Значение по умолчанию: `info`.
 
 **Файл `.env` присутствует только в целях разработки. Не используйте его в продакшене.**
 

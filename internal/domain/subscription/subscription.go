@@ -22,6 +22,11 @@ type TotalCostFilter struct {
 	To          *time.Time
 }
 
+type ListFilter struct {
+	Limit  int
+	Offset int
+}
+
 type TotalPriceSubscription struct {
 	UserID       uuid.UUID      `json:"user_id"`
 	ServiceName  string         `json:"service_name"`

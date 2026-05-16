@@ -26,7 +26,6 @@ migrate-up:
 migrate-down:
 	@make migrate-action action=down
 
-
 migrate-action:
 	@docker-compose run --rm migrate \
 		-path ./migrations \

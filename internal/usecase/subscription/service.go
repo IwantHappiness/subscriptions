@@ -82,8 +82,18 @@ func (s *Service) Delete(ctx context.Context, id int64) error {
 	return nil
 }
 
-func (s *Service) List(ctx context.Context) ([]subdomain.Subscription, error) {
-	subscriptions, err := s.repo.List(ctx)
+func (s *Service) List(ctx context.Context, input ListInput) ([]subdomain.Subscription, error) {
+	validInput, err := isValidListInput(input)
+	if err != nil {
+		return nil, err
+	}
+
+	filter := subdomain.ListFilter{
+		Limit:  validInput.Limit,
+		Offset: validInput.Offset,
+	}
+
+	subscriptions, err := s.repo.List(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
@@ -163,6 +173,22 @@ func isValidGetTotalPriceInput(input GetTotalPriceInput) (GetTotalPriceInput, er
 
 	if input.From.After(*input.To) {
 		return GetTotalPriceInput{}, fmt.Errorf("%w: to date must be after from date", ErrInvalidInput)
+	}
+
+	return input, nil
+}
+
+func isValidListInput(input ListInput) (ListInput, error) {
+	if input.Limit <= 0 {
+		return ListInput{}, fmt.Errorf("%w: limit must be positive", ErrInvalidInput)
+	}
+
+	if input.Limit > 100 {
+		return ListInput{}, fmt.Errorf("%w: limit must be less than or equal to 100", ErrInvalidInput)
+	}
+
+	if input.Offset < 0 {
+		return ListInput{}, fmt.Errorf("%w: offset must be greater than or equal to 0", ErrInvalidInput)
 	}
 
 	return input, nil

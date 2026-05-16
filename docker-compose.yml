@@ -35,6 +35,7 @@ services:
     build: .
     environment:
       - HTTP_ADDR=${HTTP_ADDR}
+      - LOG_LEVEL=${LOG_LEVEL}
       - DATABASE_DSN=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable
     ports:
       - "8080:8080"
